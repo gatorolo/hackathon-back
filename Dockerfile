@@ -1,25 +1,25 @@
-
-# Fase 1: Compilación
+# Fase 1: Construcción
 FROM maven:3.8.5-openjdk-17 AS build
 WORKDIR /app
 
-# Copiamos el pom y descargamos dependencias (esto ahorra tiempo en el deploy)
+# Copiamos los archivos de configuración primero para aprovechar el cache
 COPY pom.xml .
 RUN mvn dependency:go-offline
 
-# Copiamos el código fuente y compilamos
+# Copiamos el código fuente y compilamos el archivo app.jar
 COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Fase 2: Ejecución
-FROM openjdk:17-jdk-slim
+# Usamos esta imagen que es muy estable en Koyeb
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-# Copiamos el archivo app.jar generado en la fase anterior
-COPY --from=build /app/target/app.jar app.jar
+# Copiamos el jar desde la fase de build
+# Usamos el asterisco por si el nombre varía, pero lo renombramos a app.jar
+COPY --from=build /app/target/*.jar app.jar
 
-# Exponemos el puerto 8000 para Koyeb
 EXPOSE 8000
 
-# Ejecutamos la aplicación
+# Ejecutamos con el puerto forzado a 8000
 ENTRYPOINT ["java", "-Dserver.port=8000", "-jar", "app.jar"]
