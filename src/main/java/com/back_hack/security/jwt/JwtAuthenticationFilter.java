@@ -14,7 +14,7 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Override
+    /*@Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
@@ -26,6 +26,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
 
+    }*/
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
+        String path = request.getServletPath();
+
+        // LOG de depuración (lo verás en la consola de Koyeb)
+        System.out.println("Filtro ejecutándose para la ruta: " + path);
+
+        // 1. SI ES AUTH, PASAR DE LARGO SIN PREGUNTAR
+        if (path.startsWith("/auth/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        final String token = getTokenfromRequest(request);
+
+        // 2. Si no hay token en otras rutas, sigue normal (Spring rebotará si es necesario)
+        if (token == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        filterChain.doFilter(request, response);
     }
 
 
