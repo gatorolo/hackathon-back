@@ -52,12 +52,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
+                // 1. Forzar el uso de la configuración de CORS que definiste abajo
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                // 2. Desactivar CSRF para permitir peticiones POST externas
                 .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults())
+
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // TODO abierto para testear
+                        // 3. Permitir explícitamente el método OPTIONS para todas las rutas
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();
     }
 
