@@ -14,7 +14,7 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Override
+    /*@Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
@@ -26,17 +26,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
 
-    }
+    }*/
 
-    private String getTokenfromRequest(HttpServletRequest request) {
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
-        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-
-        if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
+        // 1. Si la ruta es de autenticación, pasar de largo inmediatamente
+        String path = request.getServletPath();
+        if (path.startsWith("/auth")) {
+            filterChain.doFilter(request, response);
+            return;
         }
-        return null;
+
+        final String token = getTokenfromRequest(request);
+
+        // 2. Si no hay token en rutas protegidas, el filtro simplemente sigue
+        // (Spring Security se encargará de rebotarlo después si no está autorizado)
+        if (token == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        filterChain.doFilter(request, response);
     }
+
+
+        private String getTokenfromRequest (HttpServletRequest request){
+
+            final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+            if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
+                return authHeader.substring(7);
+            }
+            return null;
+        }
 
 
 }
