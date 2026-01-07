@@ -14,41 +14,18 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    /*@Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-
-        final String token = getTokenfromRequest(request);
-
-        if (token == null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        filterChain.doFilter(request, response);
-
-    }*/
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. Si la ruta es de autenticación, pasar de largo inmediatamente
-        String path = request.getServletPath();
-        if (path.startsWith("/auth")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         final String token = getTokenfromRequest(request);
 
-        // 2. Si no hay token en rutas protegidas, el filtro simplemente sigue
-        // (Spring Security se encargará de rebotarlo después si no está autorizado)
         if (token == null) {
             filterChain.doFilter(request, response);
             return;
         }
-
         filterChain.doFilter(request, response);
+
     }
 
 
