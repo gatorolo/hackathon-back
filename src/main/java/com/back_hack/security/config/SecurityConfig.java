@@ -54,17 +54,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf(csrf -> csrf.disable())
+                .cors(withDefaults()) // Esto tomará automáticamente tu bean corsConfigurationSource()
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .csrf(csrf -> csrf.disable()) // Mantener desactivado
-                .cors(Customizer.withDefaults()) // Usar la config de CORS que ya tenemos
+                .authenticationProvider(authProvider) // ¡Faltaba esto!
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // ¡Y esto!
                 .authorizeHttpRequests(auth -> auth
-                        // IMPORTANTE: Esta línea debe ir PRIMERO
-                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         .anyRequest().authenticated()
-                )
-                // Si usas JWT, aquí debería ir tu filtro, pero si no, asegúrate de esto:
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                );
 
         return http.build();
     }
