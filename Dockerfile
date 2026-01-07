@@ -3,7 +3,7 @@ FROM maven:3.8.5-openjdk-17 AS build
 WORKDIR /app
 COPY . .
 # Compilamos saltando tests para evitar errores de conexión a DB durante el build
-RUN mvn clean package -DskipTests
+RUN mvn clean package -Dmaven.test.skip=true
 
 # Fase 2: Run
 FROM eclipse-temurin:17-jre-alpine
