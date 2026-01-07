@@ -4,6 +4,7 @@ import com.back_hack.security.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -49,24 +50,24 @@ public class SecurityConfig {
                 .build();
     }*/
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                // 1. Forzar el uso de la configuración de CORS que definiste abajo
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // 2. Desactivar CSRF para permitir peticiones POST externas
-                .csrf(csrf -> csrf.disable())
-
+        http
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf(csrf -> csrf.disable()) // Mantener desactivado
+                .cors(Customizer.withDefaults()) // Usar la config de CORS que ya tenemos
                 .authorizeHttpRequests(auth -> auth
-                        // 3. Permitir explícitamente el método OPTIONS para todas las rutas
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        // IMPORTANTE: Esta línea debe ir PRIMERO
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .build();
-    }
+                // Si usas JWT, aquí debería ir tu filtro, pero si no, asegúrate de esto:
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
+        return http.build();
+    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

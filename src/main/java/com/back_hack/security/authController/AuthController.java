@@ -31,9 +31,4 @@ public class AuthController {
         return ResponseEntity.ok(authServices.register(request));
     }
 
-    @GetMapping("/test")
-    public String test() {
-        return "Backend Vivo";
-    }
-
 }
